@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head lang="eng">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spider with Lightning Legs</title>
+    <style>
+        body {
+            background-color: #000;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* White dots coverage */
+        .dot {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background-color: white;
+            animation: flicker 1s ease-out infinite;
+        }
+
+        /* Animation for flickering effect */
+        @keyframes flicker {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Neon trail effect */
+        .neon-trail {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ff007f;
+            box-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f, 0 0 30px #ff007f;
+            pointer-events: none;
+            animation: trail 0.5s ease-out forwards;
+        }
+
+        /* Keyframes for the trail animation */
+        @keyframes trail {
+            0% {
+                transform: scale(3);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        /* Spider body style */
+        .spider {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: transparent;
+            border-radius: 50%;
+            background: #ff007f;
+            box-shadow: 0 0 15px #ff007f, 0 0 25px #ff007f;
+            pointer-events: none;
+            animation: flickerLeg 0.3s infinite alternate;
+            transform-origin: 0% 10%;  /* Set the start point of the leg */
+        }
+
+        /* Lightning legs style */
+        .leg {
+            position: absolute;
+            height: 2px;  /* Make it more visible */
+            background-color: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+            pointer-events: none;
+            animation: flickerLeg 0.3s infinite alternate;
+            transform-origin: 0% 10%;  /* Set the start point of the leg */
+        }
+
+        /* Flicker animation for lightning legs */
+        @keyframes flickerLeg {
+            0% { opacity: 0.8; }
+            50% { opacity: 0.5; }
+            100% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="spider" class="spider"></div>
+
+    <script>
+        const spider = document.getElementById('spider');
+        let targetX = window.innerWidth / 2;
+        let targetY = window.innerHeight / 2;
+        let trailDots = [];
+        let whiteDots = [];
+        let lightningLegs = [];
+
+        // Create white dots scattered across the page
+        function createWhiteDots() {
+            for (let i = 0; i < 100; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                dot.style.left = `${x}px`;  // Fixed string interpolation
+                dot.style.top = `${y}px`;   // Fixed string interpolation
+                document.body.appendChild(dot);
+                whiteDots.push({ x, y });
+            }
+        }
+
+        // Function to add a new trail dot
+        document.addEventListener("mousemove", (e) => {
+            const neonTrail = document.createElement("div");
+            neonTrail.classList.add("neon-trail");
+            document.body.appendChild(neonTrail);
+
+            neonTrail.style.left = `${e.pageX - 5}px`;  // Adjust position to center the dot
+            neonTrail.style.top = `${e.pageY - 5}px`;
+
+            // Store the trail dot for later reference
+            trailDots.push({ x: e.pageX, y: e.pageY });
+            targetX = e.pageX;
+            targetY = e.pageY;
+        });
+
+        // Function to create lightning legs that connect the spider to the white dots
+        function createLightningLegs() {
+            // Remove old legs
+            lightningLegs.forEach(leg => leg.remove());
+            lightningLegs = [];
+
+            // Check if the spider is near any white dots
+            whiteDots.forEach(dot => {
+                const dx = dot.x - targetX;
+                const dy = dot.y - targetY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 150) { // Only create legs if the spider is close to a dot
+                    const leg = document.createElement('div');
+                    leg.classList.add('leg');
+                    document.body.appendChild(leg);
+
+                    const angle = Math.atan2(dy, dx) * (180 / Math.PI); // Calculate the angle to rotate the line
+                    const length = distance; // Use the actual distance to set the length
+
+                    // Set leg position and rotation
+                    leg.style.left = `${targetX}px`;   // Fixed string interpolation
+                    leg.style.top = `${targetY}px`;   // Fixed string interpolation
+                    leg.style.width = `${length}px`;  // Fixed string interpolation
+                    leg.style.transform = `rotate(${angle}deg)`;  // Fixed rotation syntax
+
+                    lightningLegs.push(leg);
+                }
+            });
+        }
+
+        // Function to move the spider toward the target
+        function moveSpider() {
+            const spiderRect = spider.getBoundingClientRect();
+            const dx = targetX - (spiderRect.left + spiderRect.width / 2);
+            const dy = targetY - (spiderRect.top + spiderRect.height / 2);
+
+            const speed = 1; // Adjust the speed for slower movement
+
+            // Move spider closer to the target position
+            if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+                spider.style.left = `${spider.offsetLeft + dx * speed}px`;  // Fixed string interpolation
+                spider.style.top = `${spider.offsetTop + dy * speed}px`;   // Fixed string interpolation
+            }
+
+            // Update lightning legs
+            createLightningLegs();
+        }
+
+        // Initialize white dots
+        createWhiteDots();
+
+        // Set interval to move the spider and update legs
+        setInterval(moveSpider, 30); // Fixed interval delay for smoother movement
+    </script>
+</body>
+</html>
